@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
@@ -17,7 +18,7 @@ const PRODUCT_IMAGES: Record<string, string> = {
   'MacBook Air M3': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80',
 }
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const reservationId = searchParams.get('reservationId')
@@ -94,7 +95,7 @@ export default function CheckoutPage() {
           )}
           <button
             onClick={() => router.push('/')}
-            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold rounded-2xl hover:from-purple-500 hover:to-cyan-500 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/40"
+            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold rounded-2xl hover:from-purple-500 hover:to-cyan-500 transition-all duration-300"
           >
             CONTINUE SHOPPING
           </button>
@@ -106,24 +107,15 @@ export default function CheckoutPage() {
   return (
     <main className="min-h-screen bg-black text-white flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-cyan-900/20"></div>
-
       <div className="relative z-10 w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
           <p className="text-purple-400 text-xs font-bold tracking-[0.3em] uppercase mb-2">Secure Checkout</p>
           <h1 className="text-4xl font-black text-white">Complete Order</h1>
         </div>
-
-        {/* Card */}
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
-          {/* Product Image */}
           {product && (
             <div className="relative h-48 overflow-hidden">
-              <img
-                src={PRODUCT_IMAGES[product.name] || ''}
-                alt={product.name}
-                className="w-full h-full object-cover opacity-70"
-              />
+              <img src={PRODUCT_IMAGES[product.name] || ''} alt={product.name} className="w-full h-full object-cover opacity-70" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
               <div className="absolute bottom-4 left-4 right-4">
                 <h2 className="text-xl font-black text-white">{product.name}</h2>
@@ -131,54 +123,46 @@ export default function CheckoutPage() {
               </div>
             </div>
           )}
-
           <div className="p-6 space-y-6">
-            {/* Timer */}
             <div className="text-center">
               <p className="text-gray-400 text-xs tracking-widest uppercase mb-3">Time Remaining</p>
               <div className={`text-6xl font-black font-mono tracking-tight mb-3 ${isUrgent ? 'text-red-400 animate-pulse' : 'bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent'}`}>
                 {formatTime(timeLeft)}
               </div>
-
-              {/* Progress Bar */}
               <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-1000 ${isUrgent ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-gradient-to-r from-purple-500 to-cyan-500'}`}
                   style={{ width: `${progress}%` }}
                 ></div>
               </div>
-
-              {isUrgent && (
-                <p className="text-red-400 text-xs font-bold tracking-widest uppercase mt-2 animate-pulse">
-                  ⚡ Expiring Soon!
-                </p>
-              )}
+              {isUrgent && <p className="text-red-400 text-xs font-bold tracking-widest uppercase mt-2 animate-pulse">⚡ Expiring Soon!</p>}
             </div>
-
-            {/* Buttons */}
             <div className="space-y-3">
-              <button
-                onClick={handleConfirm}
-                disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-black text-lg rounded-2xl hover:from-purple-500 hover:to-cyan-500 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/40 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <button onClick={handleConfirm} disabled={loading}
+                className="w-full py-4 bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-black text-lg rounded-2xl hover:from-purple-500 hover:to-cyan-500 transition-all duration-300 disabled:opacity-50">
                 {loading ? '⏳ PROCESSING...' : '✅ CONFIRM PURCHASE'}
               </button>
-              <button
-                onClick={handleRelease}
-                disabled={loading}
-                className="w-full py-3 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-2xl hover:bg-white/10 hover:text-white transition-all duration-300 active:scale-95"
-              >
+              <button onClick={handleRelease} disabled={loading}
+                className="w-full py-3 bg-white/5 border border-white/10 text-gray-400 font-bold rounded-2xl hover:bg-white/10 hover:text-white transition-all duration-300">
                 ❌ Cancel & Release
               </button>
             </div>
           </div>
         </div>
-
-        <p className="text-center text-gray-600 text-xs mt-4">
-          🔒 Reservation held for 10 minutes only
-        </p>
+        <p className="text-center text-gray-600 text-xs mt-4">🔒 Reservation held for 10 minutes only</p>
       </div>
     </main>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   )
 }
