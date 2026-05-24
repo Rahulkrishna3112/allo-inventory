@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Allo Inventory — Stock Reservation System
 
-## Getting Started
+A full-stack Next.js application that solves the e-commerce inventory reservation problem — ensuring only one user can reserve the last item in stock at a time.
 
-First, run the development server:
+## 🔗 Live Demo
+[Coming soon after deployment]
 
+## 🚀 Features
+- Real-time inventory tracking across multiple warehouses
+- 10-minute reservation hold with live countdown timer
+- Concurrency-safe reservations using Redis distributed locking
+- Auto-expiry — stock automatically released if not purchased in time
+- Confirm or cancel reservations
+
+## 🛠 Tech Stack
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router) + TypeScript |
+| Database | Supabase (PostgreSQL) |
+| ORM | Prisma 7 |
+| Cache/Lock | Upstash Redis |
+| Styling | Tailwind CSS + shadcn/ui |
+| Deployment | Vercel |
+
+## 🗄 Database Schema
+- **Product** — product details (name, price, description)
+- **Warehouse** — warehouse locations
+- **Stock** — stock levels per product per warehouse (total vs reserved)
+- **Reservation** — reservation records with status (pending/confirmed/released) and expiry time
+
+## 🔌 API Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/products` | List all products with stock |
+| GET | `/api/warehouses` | List all warehouses |
+| POST | `/api/reservations` | Create a 10-min reservation |
+| POST | `/api/reservations/:id/confirm` | Confirm purchase |
+| POST | `/api/reservations/:id/release` | Cancel reservation |
+
+## ⚡ Concurrency Handling
+The core challenge — two users buying the last item simultaneously — is solved using a **Redis distributed lock**:
+1. When a user clicks Reserve, a Redis lock is acquired for that product
+2. Stock availability is checked and reservation is created atomically
+3. Lock is released immediately after
+4. If another request comes in while locked, it gets a 409 error and is asked to retry
+
+## 🏃 Running Locally
+
+1. Clone the repo
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Rahulkrishna3112/allo-inventory.git
+cd allo-inventory
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Set up environment variables in `.env`
+```env
+DATABASE_URL="your-supabase-url"
+UPSTASH_REDIS_REST_URL="your-upstash-url"
+UPSTASH_REDIS_REST_TOKEN="your-upstash-token"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Run database migrations
+```bash
+npx prisma migrate dev
+```
 
-## Learn More
+5. Seed the database
+```bash
+npx ts-node --esm prisma/seed.ts
+```
 
-To learn more about Next.js, take a look at the following resources:
+6. Start the dev server
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000)
