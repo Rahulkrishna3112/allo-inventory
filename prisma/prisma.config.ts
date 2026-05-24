@@ -1,16 +1,17 @@
 import path from 'path'
 import { defineConfig } from 'prisma/config'
+import { PrismaPg } from '@prisma/adapter-pg'
+import pg from 'pg'
 
 export default defineConfig({
-  earlyAccess: true,
   schema: path.join('prisma', 'schema.prisma'),
   migrate: {
     async adapter() {
-      const { PrismaNeon } = await import('@prisma/adapter-neon')
-      const { neonConfig, Pool } = await import('@neondatabase/serverless')
-      neonConfig.webSocketConstructor = await import('ws').then(m => m.default)
-      const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-      return new PrismaNeon(pool)
+      const pool = new pg.Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+      })
+      return new PrismaPg(pool)
     },
   },
 })
